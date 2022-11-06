@@ -12,12 +12,10 @@ router.post(
 );
 
 router.get('/fail', (req, res) => {
-  console.log(req.session);
-  res.status(400).json(req.session.messages);
+  res.status(400).json({ errors: req.session.messages });
 });
 
 router.get('/success', (req, res) => {
-  console.log(req.session);
   res.status(200).json(req.user);
 });
 
@@ -26,7 +24,6 @@ router.get('/logout', (req, res, next) => {
     if (err) {
       return next(err);
     }
-    console.log(req.session);
     res.status(200).send('Logout successful');
   });
 });

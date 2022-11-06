@@ -21,7 +21,6 @@ exports.newUser = [
 
   // Save to database
   (req, res, next) => {
-    console.log(req.body);
     // Extract the express-validator errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
