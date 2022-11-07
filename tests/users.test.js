@@ -1,20 +1,20 @@
-const userRouter = require('../routes/users');
-const User = require('../models/user');
-
 const mongoose = require('mongoose');
-
 const request = require('supertest');
 const express = require('express');
+
+require('dotenv').config(); // used in routes; configure first
+
+const User = require('../models/user');
+const userRouter = require('../routes/users');
+
+// const { connectDb, closeDb } = require('../config/database');
+const { connectDb, closeDb } = require('../config/testingDb');
+
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/users', userRouter);
-
-require('dotenv').config();
-
-// const { connectDb, closeDb } = require('../config/database');
-const { connectDb, closeDb } = require('../config/testingDb');
 
 beforeAll(async () => {
   await connectDb();

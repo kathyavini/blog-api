@@ -1,31 +1,48 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
-router.post(
-  '/login',
-  passport.authenticate('local', {
-    successRedirect: '/auth/success',
-    failureRedirect: '/auth/fail',
-    failureMessage: true,
-  })
-);
+const User = require('../models/user');
 
-router.get('/fail', (req, res) => {
-  res.status(400).json({ errors: req.session.messages });
-});
+const secret = `${process.env.JWT_SECRET}`; // jwt.sign() throws an an error if it's not provided in a template literal, despite already being a string?
 
-router.get('/success', (req, res) => {
-  res.status(200).json(req.user);
-});
+router.post('/login', (req, res, next) => {
+  let { username, password } = req.body;
 
-router.get('/logout', (req, res, next) => {
-  req.logout(function (err) {
+  User.findOne({ username: username }, (err, user) => {
     if (err) {
       return next(err);
     }
-    res.status(200).send('Logout successful');
+    if (!user) {
+      return res.status(401).json({ message: 'Incorrect username' });
+    }
+
+    bcrypt.compare(password, user.password, (err, results) => {
+      if (results) {
+        const token = jwt.sign({ user }, secret, { expiresIn: '1h' });
+        return res.status(200).json({
+          message: 'Authentication Successful',
+          token,
+        });
+      } else {
+        // passwords do not match!
+        return res.status(401).json({ message: 'Incorrect password' });
+      }
+    });
   });
 });
+
+// Route to test authorization only
+router.get(
+  '/protected',
+  passport.authenticate('jwt', { session: false }),
+  (req, res, next) => {
+    res
+      .status(200)
+      .json({ message: 'You have made it to the protected route' });
+  }
+);
 
 module.exports = router;

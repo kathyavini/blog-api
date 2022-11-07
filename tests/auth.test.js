@@ -6,12 +6,12 @@ const logger = require('morgan');
 const session = require('express-session');
 const passport = require('passport');
 
+require('dotenv').config(); // used in routes; configure first
+
 const authRouter = require('../routes/auth');
 const usersRouter = require('../routes/users');
 
 const app = express();
-
-require('dotenv').config();
 
 // const { connectDb, closeDb } = require('../config/database');
 const { connectDb, closeDb } = require('../config/testingDb');
@@ -47,8 +47,10 @@ afterAll(async () => {
   await closeDb();
 });
 
-// In order to have access to sessions
+// In order to have access to sessions. See: https://stackoverflow.com/questions/14001183/how-to-authenticate-supertest-requests-with-passport
 const agent = request.agent(app);
+
+let jwt = '';
 
 // Just to save a user to this instance of the testing database
 test('Create user route works with valid input', (done) => {
@@ -64,32 +66,21 @@ test('Create user route works with valid input', (done) => {
     .expect(201, done);
 });
 
-test('Log in route redirects with valid name and password', (done) => {
+test('Login returns jwt token with valid name and password', (done) => {
   agent
     .post('/auth/login')
     .type('form')
     .send({ username: 'testuserSupertest', password: 'testpasswordSupertest' })
-    .expect(302)
-    .end((err, res) => {
-      expect(res.header.location).toEqual('/auth/success');
-      done();
-    });
-});
-
-test('Log in route with valid name and password returns user object', (done) => {
-  agent
-    .post('/auth/login')
-    .type('form')
-    .send({ username: 'testuserSupertest', password: 'testpasswordSupertest' })
-    .redirects(1)
     .expect(200)
     .end((err, res) => {
-      expect(res.body).toMatchObject({ username: 'testuserSupertest' });
+      // save token for next test
+      jwt = res.body.token;
+      expect(res.body.message).toEqual('Authentication Successful');
       done();
     });
 });
 
-test('Log in route fails informatively with invalid name', (done) => {
+test('Log in route fails informatively for invalid username', (done) => {
   agent
     .post('/auth/login')
     .type('form')
@@ -97,10 +88,9 @@ test('Log in route fails informatively with invalid name', (done) => {
       username: 'testuserSupertestDNE',
       password: 'testpasswordSupertest',
     })
-    .redirects(1)
     .expect(400)
     .end((err, res) => {
-      expect(res.body).toEqual({ errors: ['Incorrect username'] });
+      expect(res.body.message).toEqual('Incorrect username');
       done();
     });
 });
@@ -113,14 +103,33 @@ test('Log in route fails informatively with invalid password', (done) => {
       username: 'testuserSupertest',
       password: 'testpasswordSupertestDNE',
     })
-    .redirects(1)
     .expect(400)
     .end((err, res) => {
-      expect(res.body).toEqual({
-        errors: ['Incorrect username', 'Incorrect password'],
-      });
+      expect(res.body.message).toEqual('Incorrect password');
       done();
     });
+});
+
+test('JWT allows access to protected routes', (done) => {
+  agent
+    .get('/auth/protected')
+    .type('form')
+    .set('Authorization', `Bearer ${jwt}`)
+    .expect(200)
+    .end((err, res) => {
+      expect(res.body.message).toEqual(
+        'You have made it to the protected route'
+      );
+      done();
+    });
+});
+
+test('Junk JWT does not allow access to protected routes', (done) => {
+  agent
+    .get('/auth/protected')
+    .type('form')
+    .set('Authorization', 'randomStringNotToken')
+    .expect(401, done);
 });
 
 app.use((err, req, res, next) => {

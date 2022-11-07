@@ -5,11 +5,11 @@ const logger = require('morgan');
 const passport = require('passport');
 const session = require('express-session');
 
+require('dotenv').config(); // used in routes; configure first
+
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const authRouter = require('./routes/auth');
-
-require('dotenv').config();
 
 const { connectDb } = require('./config/database');
 connectDb();
