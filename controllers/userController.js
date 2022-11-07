@@ -1,18 +1,28 @@
 const User = require('../models/user');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
+const passport = require('passport');
 
-exports.listUsers = (req, res, next) => {
-  res.send('List of users');
-};
+exports.listUsers = [
+  passport.authenticate('jwt', { session: false }),
+  (req, res, next) => {
+    res.send('Implement list of users to authorized user');
+  },
+];
 
 exports.newUser = [
   body('displayName', 'Display name required')
     .trim()
     .isLength({ min: 1 })
     .escape(),
-  body('username', 'Username required').trim().isLength({ min: 1 }).escape(),
-  body('password', 'Password required').trim().isLength({ min: 1 }).escape(),
+  body('username', 'Username required') //
+    .trim()
+    .isLength({ min: 1 })
+    .escape(),
+  body('password', 'Password required') //
+    .trim()
+    .isLength({ min: 1 })
+    .escape(),
   body('passwordConfirm', 'Password confirmation must match password')
     .trim()
     .exists()
@@ -62,5 +72,26 @@ exports.newUser = [
         });
       }
     });
+  },
+];
+
+exports.getUser = [
+  passport.authenticate('jwt', { session: false }),
+  (req, res, next) => {
+    res.send('Implement user details to authorized user');
+  },
+];
+
+exports.updateUser = [
+  passport.authenticate('jwt', { session: false }),
+  (req, res, next) => {
+    res.send('Implement user update to authorized user');
+  },
+];
+
+exports.deleteUser = [
+  passport.authenticate('jwt', { session: false }),
+  (req, res, next) => {
+    res.send('Implement user delete to authorized user');
   },
 ];

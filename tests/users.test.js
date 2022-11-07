@@ -52,10 +52,6 @@ describe('Database operations', () => {
 });
 
 describe('User routes', () => {
-  test('Get users path works', (done) => {
-    request(app).get('/users').expect('List of users').expect(200, done);
-  });
-
   /* Tests are following the format of this StackOverflow: https://stackoverflow.com/questions/47865190/using-expect-any-with-supertest-to-check-response-body */
 
   test('Create user route fails with bad input', (done) => {

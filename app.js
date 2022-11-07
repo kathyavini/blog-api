@@ -7,9 +7,12 @@ const session = require('express-session');
 
 require('dotenv').config(); // used in routes; configure first
 
-const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
 const authRouter = require('./routes/auth');
+const authorsRouter = require('./routes/authors');
+const commentsRouter = require('./routes/comments');
+const indexRouter = require('./routes/index');
+const postsRouter = require('./routes/posts');
+const usersRouter = require('./routes/users');
 
 const { connectDb } = require('./config/database');
 connectDb();
@@ -39,6 +42,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
+app.use('/blog', postsRouter);
+app.use('/comments', commentsRouter);
+app.use('/authors', authorsRouter);
 
 app.use((err, req, res, next) => {
   res.json(err.message);
