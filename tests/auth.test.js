@@ -1,43 +1,8 @@
 const request = require('supertest');
-const express = require('express');
-const path = require('path');
-const cookieParser = require('cookie-parser');
-const logger = require('morgan');
-const session = require('express-session');
-const passport = require('passport');
-
-require('dotenv').config(); // used in routes; configure first
-
-const authRouter = require('../routes/auth');
-const usersRouter = require('../routes/users');
-
-const app = express();
+const app = require('./testingApp');
 
 // const { connectDb, closeDb } = require('../config/database');
 const { connectDb, closeDb } = require('../config/testingDb');
-
-// Set up local authentication
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-  })
-);
-
-require('../config/passport');
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/users', usersRouter);
-app.use('/auth', authRouter);
 
 beforeAll(async () => {
   await connectDb();
@@ -48,6 +13,8 @@ afterAll(async () => {
 });
 
 // In order to have access to sessions. See: https://stackoverflow.com/questions/14001183/how-to-authenticate-supertest-requests-with-passport
+
+// This is only necessary for testing session-based authentication, but doesn't interfere with jwt auth testing
 const agent = request.agent(app);
 
 let jwt = '';
@@ -58,10 +25,10 @@ test('Create user route works with valid input', (done) => {
     .post('/users')
     .type('form')
     .send({
-      displayName: 'Supertest Display Name',
-      username: 'testuserSupertest',
-      password: 'testpasswordSupertest',
-      passwordConfirm: 'testpasswordSupertest',
+      displayName: 'Auth Route Test',
+      username: 'authtest',
+      password: 'authtest',
+      passwordConfirm: 'authtest',
     })
     .expect(201, done);
 });
@@ -70,7 +37,7 @@ test('Login returns jwt token with valid name and password', (done) => {
   agent
     .post('/auth/login')
     .type('form')
-    .send({ username: 'testuserSupertest', password: 'testpasswordSupertest' })
+    .send({ username: 'authtest', password: 'authtest' })
     .expect(200)
     .end((err, res) => {
       // save token for next test
@@ -85,7 +52,7 @@ test('Log in route fails informatively for invalid username', (done) => {
     .post('/auth/login')
     .type('form')
     .send({
-      username: 'testuserSupertestDNE',
+      username: 'nonexistentuser',
       password: 'testpasswordSupertest',
     })
     .expect(400)
@@ -100,8 +67,8 @@ test('Log in route fails informatively with invalid password', (done) => {
     .post('/auth/login')
     .type('form')
     .send({
-      username: 'testuserSupertest',
-      password: 'testpasswordSupertestDNE',
+      username: 'authtest',
+      password: 'wrongpassword',
     })
     .expect(400)
     .end((err, res) => {
@@ -131,9 +98,3 @@ test('Junk JWT does not allow access to protected routes', (done) => {
     .set('Authorization', 'randomStringNotToken')
     .expect(401, done);
 });
-
-app.use((err, req, res, next) => {
-  res.json(err.message);
-});
-
-module.exports = app;

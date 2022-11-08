@@ -1,20 +1,11 @@
-const mongoose = require('mongoose');
 const request = require('supertest');
-const express = require('express');
+const app = require('./testingApp');
 
-require('dotenv').config(); // used in routes; configure first
-
+const mongoose = require('mongoose');
 const User = require('../models/user');
-const userRouter = require('../routes/users');
 
-// const { connectDb, closeDb } = require('../config/database');
-const { connectDb, closeDb } = require('../config/testingDb');
-
-const app = express();
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use('/users', userRouter);
+const { connectDb, closeDb } = require('../config/database');
+// const { connectDb, closeDb } = require('../config/testingDb');
 
 beforeAll(async () => {
   await connectDb();
@@ -27,10 +18,10 @@ afterAll(async () => {
 describe('Database operations', () => {
   test('Users with all required properties save to database', async () => {
     const testUser = new User({
-      displayName: 'A valid user display name',
-      username: 'testuser',
-      password: 'testpassword',
-      editor: false,
+      displayName: 'Supertest Database Test',
+      username: 'databasetest',
+      password: 'databasetest',
+      author: false,
       admin: false,
     });
 
@@ -51,7 +42,7 @@ describe('Database operations', () => {
   });
 });
 
-describe('User routes', () => {
+describe('User creation routes', () => {
   /* Tests are following the format of this StackOverflow: https://stackoverflow.com/questions/47865190/using-expect-any-with-supertest-to-check-response-body */
 
   test('Create user route fails with bad input', (done) => {
@@ -59,9 +50,9 @@ describe('User routes', () => {
       .post('/users')
       .type('form')
       .send({
-        displayName: 'Supertest Display Name',
-        username: 'testuserSupertest',
-        password: 'testpasswordSupertest',
+        displayName: 'Supertest User Route Test',
+        username: 'supertestuserroutes',
+        password: 'supertestuserroutes',
         passwordConfirm: 'unmatchingPassword',
       })
       .expect(400)
@@ -81,10 +72,10 @@ describe('User routes', () => {
       .post('/users')
       .type('form')
       .send({
-        displayName: 'Supertest Display Name',
-        username: 'testuserSupertest',
-        password: 'testpasswordSupertest',
-        passwordConfirm: 'testpasswordSupertest',
+        displayName: 'Supertest User Route Test',
+        username: 'supertestuserroutes',
+        password: 'supertestuserroutes',
+        passwordConfirm: 'supertestuserroutes',
       })
       .expect(201)
       .end((err, res) => {
@@ -92,8 +83,8 @@ describe('User routes', () => {
           return done(err);
         }
         expect(res.body).toMatchObject({
-          displayName: 'Supertest Display Name',
-          username: 'testuserSupertest',
+          displayName: 'Supertest User Route Test',
+          username: 'supertestuserroutes',
         });
         done();
       });
@@ -105,9 +96,9 @@ describe('User routes', () => {
       .type('form')
       .send({
         displayName: 'Supertest Display Name',
-        username: 'testuserSupertest',
-        password: 'testpasswordSupertest',
-        passwordConfirm: 'testpasswordSupertest',
+        username: 'supertestuserroutes',
+        password: 'supertestuserroutes',
+        passwordConfirm: 'supertestuserroutes',
       })
       .expect(400)
       .end((err, res) => {
@@ -122,8 +113,53 @@ describe('User routes', () => {
   });
 });
 
-app.use((err, req, res, next) => {
-  res.json(err.message);
-});
+describe.only('Protected user routes', () => {
+  let jwt = '';
+  let user_admin = '';
 
-module.exports = app;
+  // This test is redundant with how it is tested in auth.test.js but I wasn't sure how else to set and save the jwt
+  test('Admin user can receive jwt', async () => {
+    // Requires an admin user in the database
+    const adminUser = new User({
+      displayName: 'Test Admin User',
+      username: 'adminuser',
+      password: 'adminuser',
+      passwordConfirm: 'adminuser',
+      author: false,
+      admin: true,
+    });
+
+    await adminUser.save();
+    user_admin = adminUser._id;
+
+    request(app)
+      .post('/auth/login')
+      .type('form')
+      .send({ username: 'admin', password: 'admin' })
+      .expect(200)
+      .end((err, res) => {
+        jwt = res.body.token;
+        expect(res.body.message).toEqual('Authentication Successful');
+        done();
+      });
+  });
+
+  test.skip('Admin can GET list of authorized users', () => {});
+
+  test('Admin user can update user permissions ', () => {
+    request(app)
+      .post('/users/permissions')
+      .type('form')
+      .set('Authorization', `Bearer ${jwt}`)
+      .send({
+        user_id: user_admin,
+        author: true,
+      })
+      .expect(200)
+      .end((err, res) => {
+        console.log(res.body);
+        expect(res.body).toBeDefined();
+        done();
+      });
+  });
+});
