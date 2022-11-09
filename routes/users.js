@@ -8,13 +8,13 @@ router
   .post(controller.newUser);
 
 router
+  .route('/permissions') //
+  .put(controller.updateUserPermissions);
+
+router
   .route('/:userId') //
   .get(controller.getUser)
   .put(controller.updateUser)
   .delete(controller.deleteUser);
-
-router
-  .route('/permissions') //
-  .post(controller.updateUserPermissions);
 
 module.exports = router;

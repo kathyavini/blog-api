@@ -3,10 +3,15 @@ const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 
+const { checkAdmin } = require('../middleware/checkRoles');
+
 exports.listUsers = [
   passport.authenticate('jwt', { session: false }),
+  checkAdmin,
   (req, res, next) => {
-    res.send('Implement list of users to authorized user');
+    User.find({}, (err, userList) => {
+      res.status(200).json(userList);
+    });
   },
 ];
 
@@ -75,61 +80,60 @@ exports.newUser = [
   },
 ];
 
-(exports.updateUserPermissions = passport.authenticate('jwt', {
-  session: false,
-})),
-  [
-    body('user_id', 'User id required') //
-      .trim()
-      .isLength({ min: 1 })
-      .escape(),
+exports.updateUserPermissions = [
+  passport.authenticate('jwt', {
+    session: false,
+  }),
+  checkAdmin,
+  body('user_id', 'User id required') //
+    .trim()
+    .isLength({ min: 1 })
+    .escape(),
 
-    body('admin', 'Permissions format invalid')
-      .trim()
-      .optional({ checkFalsy: true })
-      .exists()
-      .isBoolean()
-      .escape(),
+  body('admin', 'Permissions format invalid')
+    .trim()
+    .optional({ checkFalsy: true })
+    .exists()
+    .isBoolean()
+    .escape(),
 
-    body('author', 'Permissions format invalid')
-      .trim()
-      .optional({ checkFalsy: true })
-      .exists()
-      .isBoolean()
-      .escape(),
+  body('author', 'Permissions format invalid')
+    .trim()
+    .optional({ checkFalsy: true })
+    .exists()
+    .isBoolean()
+    .escape(),
 
-    (req, res, next) => {
-      // Extract the express-validator errors
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res
-          .status(400)
-          .json({ errors: errors.array().map((x) => x.msg) });
+  (req, res, next) => {
+    // Extract the express-validator errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array().map((x) => x.msg) });
+    }
+    // Neither permissions value has been provided
+    if (!req.body.admin && !req.body.author) {
+      return res
+        .status(400)
+        .json({ error: 'No user permissions values provided' });
+    }
+
+    let update = {};
+
+    if (req.body.author) {
+      update.author = true;
+    }
+    if (req.body.admin) {
+      update.admin = true;
+    }
+
+    User.findByIdAndUpdate(req.body.user_id, update, (err) => {
+      if (err) {
+        return next(err);
       }
-      // Neither permissions value has been provided
-      if (!req.body.admin && !req.body.author) {
-        return res
-          .status(400)
-          .json({ errors: 'No user permissions values provided' });
-      }
-
-      let update = {};
-
-      if (req.body.author) {
-        update.author = true;
-      }
-      if (req.body.admin) {
-        update.admin = true;
-      }
-
-      User.findByIdAndUpdate(req.body.user_id, update, (err) => {
-        if (err) {
-          return next(err);
-        }
-        res.status(200).json({ message: 'Successfully updated permissions' });
-      });
-    },
-  ];
+      res.status(200).json({ message: 'Successfully updated permissions' });
+    });
+  },
+];
 
 exports.getUser = [
   passport.authenticate('jwt', { session: false }),

@@ -24,7 +24,7 @@ passport.use(
     console.log('issued at time is', readableIssued);
     console.log('expiry time is', readableExpiry);
 
-    User.findOne({ _id: jwt_payload.user._id }, (err, user) => {
+    User.findOne({ _id: jwt_payload.sub }, (err, user) => {
       if (err) {
         return done(err);
       }
