@@ -12,20 +12,16 @@ afterAll(async () => {
   await closeDb();
 });
 
-// In order to have access to sessions. See: https://stackoverflow.com/questions/14001183/how-to-authenticate-supertest-requests-with-passport
-
-// This is only necessary for testing session-based authentication, but doesn't interfere with jwt auth testing
 const agent = request.agent(app);
 
 let jwt = '';
 
-// Just to save a user to this instance of the testing database
 test('Create user route works with valid input', (done) => {
   agent
     .post('/users')
     .type('form')
     .send({
-      displayName: 'Auth Route Test',
+      displayName: 'Supertest Auth Test',
       username: 'authtest',
       password: 'authtest',
       passwordConfirm: 'authtest',
@@ -33,62 +29,53 @@ test('Create user route works with valid input', (done) => {
     .expect(201, done);
 });
 
-test('Login returns jwt token with valid name and password', (done) => {
-  agent
+test('Login returns jwt token with valid name and password', async () => {
+  const response = await agent
     .post('/auth/login')
     .type('form')
     .send({ username: 'authtest', password: 'authtest' })
-    .expect(200)
-    .end((err, res) => {
-      // save token for next test
-      jwt = res.body.token;
-      expect(res.body.message).toEqual('Authentication Successful');
-      done();
-    });
+    .expect(200);
+  // save token for next test
+  jwt = response.body.token;
+  expect(response.body.message).toEqual('Authentication Successful');
 });
 
-test('Log in route fails informatively for invalid username', (done) => {
-  agent
+test('Log in route fails informatively for invalid username', async () => {
+  const response = await agent
     .post('/auth/login')
     .type('form')
     .send({
       username: 'nonexistentuser',
       password: 'testpasswordSupertest',
     })
-    .expect(400)
-    .end((err, res) => {
-      expect(res.body.message).toEqual('Incorrect username');
-      done();
-    });
+    .expect(401);
+
+  expect(response.body.message).toEqual('Incorrect username');
 });
 
-test('Log in route fails informatively with invalid password', (done) => {
-  agent
+test('Log in route fails informatively with invalid password', async () => {
+  const response = await agent
     .post('/auth/login')
     .type('form')
     .send({
       username: 'authtest',
       password: 'wrongpassword',
     })
-    .expect(400)
-    .end((err, res) => {
-      expect(res.body.message).toEqual('Incorrect password');
-      done();
-    });
+    .expect(401);
+
+  expect(response.body.message).toEqual('Incorrect password');
 });
 
-test('JWT allows access to protected routes', (done) => {
-  agent
+test('JWT allows access to protected routes', async () => {
+  const response = await agent
     .get('/auth/protected')
     .type('form')
     .set('Authorization', `Bearer ${jwt}`)
-    .expect(200)
-    .end((err, res) => {
-      expect(res.body.message).toEqual(
-        'You have made it to the protected route'
-      );
-      done();
-    });
+    .expect(200);
+
+  expect(response.body.message).toEqual(
+    'You have made it to the protected route'
+  );
 });
 
 test('Junk JWT does not allow access to protected routes', (done) => {
