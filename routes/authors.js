@@ -4,13 +4,10 @@ const controller = require('../controllers/authorController');
 
 router //
   .route('/')
-  .get(controller.getAuthors)
-  .post(controller.newAuthor);
+  .get(controller.getAllAuthors);
 
-router
-  .route('/:articleId')
-  .get(controller.getAuthor)
-  .put(controller.updateAuthor)
-  .delete(controller.deleteAuthor);
+router //
+  .route('/:authorSlug')
+  .get(controller.getAuthorArticles);
 
 module.exports = router;

@@ -39,10 +39,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
+// app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
-app.use('/blog', postsRouter);
+app.use('/', postsRouter);
 app.use('/comments', commentsRouter);
 app.use('/authors', authorsRouter);
 

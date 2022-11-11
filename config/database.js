@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 
+mongoose.set('toObject', { virtuals: true });
+mongoose.set('toJSON', { virtuals: true });
+
 const mongoDb = process.env.MONGO_URI;
 
 let db;
