@@ -3,10 +3,11 @@ const { body, validationResult } = require('express-validator');
 const passport = require('passport');
 const slug = require('slug');
 
-const { checkAuthor } = require('../middleware/checkRoles');
+const { checkAdmin } = require('../middleware/checkRoles');
 
 exports.getPosts = (req, res) => {
   Post.find(
+    // {},
     { published: true },
     'title slug url body published_at created_at author url'
   )
@@ -22,7 +23,7 @@ exports.getPosts = (req, res) => {
 
 exports.newPost = [
   passport.authenticate('jwt', { session: false }),
-  checkAuthor,
+  checkAdmin,
   body('title', 'Post title required').trim().isLength({ min: 1 }).escape(),
   body('body', 'Post body text required') //
     .trim()
@@ -72,19 +73,42 @@ exports.newPost = [
 ];
 
 exports.getPost = (req, res, next) => {
-  res.send('Implement post GET');
-};
+  Post.findOne(
+    { slug: req.params.postId },
+    'title slug url body published_at created_at updated_at author url published'
+  )
+    .populate('author', 'displayName url')
+    .exec((err, post) => {
+      if (err) {
+        return next(err);
+      }
 
-exports.updatePost = [
-  passport.authenticate('jwt', { session: false }),
-  (req, res, next) => {
-    res.send('Implement post update to author only');
-  },
-];
+      if (!post) {
+        return res.status(404).json({ message: 'Post not found.' });
+      }
+
+      if (post.published) {
+        res.status(200).json(post);
+      } else {
+        // Give a hint if the post exists but is unpublished
+        res.status(404).json({
+          message:
+            'Post not found. If you are the post author, make sure that the post has been set to published',
+        });
+      }
+    });
+};
 
 exports.deletePost = [
   passport.authenticate('jwt', { session: false }),
+  checkAdmin,
   (req, res, next) => {
-    res.send('Implement post delete to author only');
+    Post.findOneAndDelete({ slug: req.params.postId }, (err) => {
+      if (err) {
+        return next(err);
+      }
+
+      res.status(200).json({ message: 'Post successfully deleted' });
+    });
   },
 ];

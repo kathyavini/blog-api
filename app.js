@@ -43,7 +43,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/users', usersRouter);
 app.use('/auth', authRouter);
 app.use('/', postsRouter);
-app.use('/comments', commentsRouter);
+app.use('/', commentsRouter);
 app.use('/authors', authorsRouter);
 
 app.use((err, req, res, next) => {

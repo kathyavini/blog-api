@@ -7,10 +7,12 @@ const CommentSchema = new Schema({
   updated_at: Date,
   body: { type: String, required: true },
   author: { type: Schema.Types.ObjectId, ref: 'User' },
+  parentPost: { type: Schema.Types.ObjectId, ref: 'Post' },
+  childComments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
 });
 
 CommentSchema.virtual('url').get(function () {
-  return `/comments/${this._id}`;
+  return `/${parentPost.slug}/comments/${this._id}`;
 });
 
 module.exports = mongoose.model('Comment', CommentSchema);
