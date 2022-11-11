@@ -3,12 +3,13 @@ const router = express.Router();
 const controller = require('../controllers/commentController');
 
 router //
-  .route('/:postSlug/comments')
+  .route('/:postId/comments')
   .get(controller.getComments) // might not be necessary
   .post(controller.newComment);
 
 router
-  .route('/:postSlug/comments/:commentId')
+  .route('/:postId/comments/:commentId')
+  .post(controller.newCommentReply)
   .get(controller.getComment)
   .put(controller.updateComment)
   .delete(controller.deleteComment);

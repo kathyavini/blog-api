@@ -3,16 +3,14 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const CommentSchema = new Schema({
-  published_at: Date,
+  published_at: { type: Date, required: true },
   updated_at: Date,
   body: { type: String, required: true },
   author: { type: Schema.Types.ObjectId, ref: 'User' },
-  parentPost: { type: Schema.Types.ObjectId, ref: 'Post' },
+  // parentPost: { type: Schema.Types.ObjectId, ref: 'Post', required: true },
   childComments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
-});
-
-CommentSchema.virtual('url').get(function () {
-  return `/${parentPost.slug}/comments/${this._id}`;
+  parentUrl: { type: String, required: true },
+  commentReply: { type: Boolean, required: true },
 });
 
 module.exports = mongoose.model('Comment', CommentSchema);
