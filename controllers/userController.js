@@ -2,12 +2,13 @@ const User = require('../models/user');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
+const slug = require('slug');
 
-const { checkAdmin } = require('../middleware/checkRoles');
+const { checkIsAdmin } = require('../middleware/checkRoles');
 
 exports.listUsers = [
   passport.authenticate('jwt', { session: false }),
-  checkAdmin,
+  checkIsAdmin,
   (req, res, next) => {
     User.find({}, (err, userList) => {
       res.status(200).json(userList);
@@ -50,6 +51,7 @@ exports.newUser = [
       password: req.body.password,
       author: false,
       admin: false,
+      slug: slug(req.body.displayName),
     });
 
     // Check if username already exists
@@ -84,7 +86,7 @@ exports.updateUserPermissions = [
   passport.authenticate('jwt', {
     session: false,
   }),
-  checkAdmin,
+  checkIsAdmin,
   body('user_id', 'User id required') //
     .trim()
     .isLength({ min: 1 })

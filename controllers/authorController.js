@@ -1,30 +1,33 @@
 const Post = require('../models/post');
-const { body, validationResult } = require('express-validator');
-const passport = require('passport');
-const slug = require('slug');
-
-const { checkAuthor, checkAdmin } = require('../middleware/checkRoles');
+const User = require('../models/user');
 
 exports.getAllAuthors = (req, res, next) => {
-  res.send('Implement full author list');
+  User.find({ author: true }, (err, listAuthors) => {
+    if (err) {
+      return next(err);
+    }
+    return res.status(200).json(listAuthors);
+  });
 };
 
 exports.getAuthorArticles = (req, res, next) => {
-  res.send('Implement author GET (return all articles)');
-};
+  User.findOne({ slug: req.params.authorId }, (err, author) => {
+    if (err) {
+      return next(err);
+    }
 
-exports.authorNewPost = (req, res, next) => {
-  res.send('Implement POST new post by this author');
-};
+    if (!author) {
+      return res.status(404).json({ error: 'Author not found' });
+    }
 
-exports.getAuthorPost = (req, res, next) => {
-  res.send('Implement post GET by post author');
-};
+    Post.find({ author: author._id, published: true }, (err, posts) => {
+      if (err) {
+        return next(err);
+      }
 
-exports.updateAuthorPost = (req, res, next) => {
-  res.send('Implement post PUT (update) by post author');
-};
+      console.log('post search returned', posts);
 
-exports.deleteAuthorPost = (req, res, next) => {
-  res.send('Implement post DELETE by post author');
+      return res.status(200).json(posts);
+    });
+  });
 };

@@ -8,13 +8,13 @@ router //
 
 router //
   .route('/:authorId')
-  .get(controller.getAuthorArticles)
-  .post(controller.authorNewPost);
+  .get(controller.getAuthorArticles);
+// .post(controller.authorNewPost);
 
-router //
-  .route('/:authorId/:postId')
-  .get(controller.getAuthorPost)
-  .put(controller.updateAuthorPost)
-  .delete(controller.deleteAuthorPost);
+// router //
+//   .route('/:authorId/:postId')
+//   .get(controller.getAuthorPost)
+//   .put(controller.updateAuthorPost)
+//   .delete(controller.deleteAuthorPost);
 
 module.exports = router;

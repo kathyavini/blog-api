@@ -3,14 +3,30 @@ const router = express.Router();
 const controller = require('../controllers/postController');
 
 router //
-  .route('/')
+  .route('/posts')
   .get(controller.getPosts)
-  .post(controller.newPost); // By admin for debugging; later this will only exist on author route
+  .post(controller.newPost);
+
+router //
+  .route('/posts/unpublished')
+  .get(controller.getUnpublishedPosts);
+
+router //
+  .route('/posts/all')
+  .get(controller.getAllPosts);
 
 router
   .route('/:postId')
   .get(controller.getPost)
-  // Note that post update can only be done under the author route (by post author).
-  .delete(controller.deletePost); // By admin
+  .put(controller.updatePost)
+  .delete(controller.deletePost); // By admin or post author
+
+router //
+  .route('/:postId/publish')
+  .put(controller.publishPost); // by post author
+
+router //
+  .route('/:postId/unpublish')
+  .put(controller.unpublishPost); // by post author
 
 module.exports = router;
