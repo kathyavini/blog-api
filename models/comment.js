@@ -11,6 +11,7 @@ const CommentSchema = new Schema({
   childComments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
   parentUrl: { type: String, required: true },
   commentReply: { type: Boolean, required: true },
+  parentComment: String,
 });
 
 module.exports = mongoose.model('Comment', CommentSchema);
