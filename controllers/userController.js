@@ -122,10 +122,10 @@ exports.updateUserPermissions = [
     let update = {};
 
     if (req.body.author) {
-      update.author = true;
+      update.author = req.body.author;
     }
     if (req.body.admin) {
-      update.admin = true;
+      update.admin = req.body.admin;
     }
 
     User.findByIdAndUpdate(req.body.user_id, update, (err) => {
@@ -140,7 +140,26 @@ exports.updateUserPermissions = [
 exports.getUser = [
   passport.authenticate('jwt', { session: false }),
   (req, res, next) => {
-    res.send('Implement user details to authorized user');
+    console.log('URL request params are', req.params.userId);
+    User.findById(req.params.userId, (err, user) => {
+      if (err) {
+        return next(err);
+      }
+
+      console.log('database fetchd user', user);
+
+      if (!user) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+
+      console.log('Passport auth user', req.user);
+
+      if (!req.user.admin && req.user.sub !== user.id) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      res.status(200).json(user);
+    });
   },
 ];
 
@@ -154,6 +173,26 @@ exports.updateUser = [
 exports.deleteUser = [
   passport.authenticate('jwt', { session: false }),
   (req, res, next) => {
-    res.send('Implement user delete to authorized user');
+    User.findById(req.params.userId).exec((err, user) => {
+      if (err) {
+        return next(err);
+      }
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      if (!req.user.admin && req.user.sub !== user.id) {
+        return res.status(403).json({ error: 'Forbidden' });
+      }
+
+      User.deleteOne({ _id: req.params.userId }, (err, result) => {
+        if (err) {
+          return next(err);
+        }
+
+        return res.status(200).json(result);
+      });
+    });
   },
 ];
