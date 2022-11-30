@@ -64,12 +64,12 @@ exports.newPost = [
   checkIsAuthor,
   body('title', 'Post title required') //
     .trim()
-    .isLength({ min: 1 })
-    .escape(),
+    .isLength({ min: 1 }),
+  // .escape(), // React will escape the string anyway
   body('body', 'Post body text required') //
     .trim()
-    .isLength({ min: 1 })
-    .escape(),
+    .isLength({ min: 1 }),
+  // .escape(),
 
   // Save to database
   (req, res, next) => {
@@ -145,8 +145,8 @@ exports.updatePost = [
   checkIsAuthor,
   body('body', 'Post body text required') //
     .trim()
-    .isLength({ min: 1 })
-    .escape(),
+    .isLength({ min: 1 }),
+  // .escape(), // React will escape when displayed
 
   // Save to database
   (req, res, next) => {

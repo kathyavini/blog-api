@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
@@ -18,6 +19,8 @@ const { connectDb } = require('./config/database');
 connectDb();
 
 const app = express();
+
+app.use(cors({ origin: ['http://localhost:8000'] }));
 
 // Set up local authentication
 app.use(

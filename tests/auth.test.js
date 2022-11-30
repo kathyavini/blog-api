@@ -2,7 +2,7 @@ const request = require('supertest');
 const app = require('./testingApp');
 
 // const { connectDb, closeDb } = require('../config/database');
-const { connectDb, closeDb } = require('../config/testingDb');
+const { connectDb, closeDb } = require('./testingDb');
 
 beforeAll(async () => {
   await connectDb();

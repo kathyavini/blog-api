@@ -23,8 +23,7 @@ exports.newComment = [
   passport.authenticate('jwt', { session: false }),
   body('body', 'Comment text required') //
     .trim()
-    .isLength({ min: 1 })
-    .escape(),
+    .isLength({ min: 1 }),
 
   (req, res, next) => {
     const errors = validationResult(req);
@@ -73,8 +72,8 @@ exports.newCommentReply = [
   passport.authenticate('jwt', { session: false }),
   body('body', 'Comment text required') //
     .trim()
-    .isLength({ min: 1 })
-    .escape(),
+    .isLength({ min: 1 }),
+
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -132,8 +131,8 @@ exports.updateComment = [
   passport.authenticate('jwt', { session: false }),
   body('body', 'Comment text required') //
     .trim()
-    .isLength({ min: 1 })
-    .escape(),
+    .isLength({ min: 1 }),
+
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

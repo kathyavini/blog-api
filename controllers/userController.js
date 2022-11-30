@@ -140,19 +140,14 @@ exports.updateUserPermissions = [
 exports.getUser = [
   passport.authenticate('jwt', { session: false }),
   (req, res, next) => {
-    console.log('URL request params are', req.params.userId);
     User.findById(req.params.userId, (err, user) => {
       if (err) {
         return next(err);
       }
 
-      console.log('database fetchd user', user);
-
       if (!user) {
         return res.status(404).json({ error: 'Not found' });
       }
-
-      console.log('Passport auth user', req.user);
 
       if (!req.user.admin && req.user.sub !== user.id) {
         return res.status(403).json({ error: 'Forbidden' });

@@ -3,8 +3,8 @@ const app = require('./testingApp');
 
 const User = require('../models/user');
 
-const { connectDb, closeDb } = require('../config/database');
-// const { connectDb, closeDb } = require('../config/testingDb');
+// const { connectDb, closeDb } = require('../config/database');
+const { connectDb, closeDb } = require('./testingDb');
 
 const {
   createAdminUser,
