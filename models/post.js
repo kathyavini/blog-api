@@ -10,7 +10,6 @@ const PostSchema = new Schema({
   title: { type: String, required: true },
   slug: { type: String, required: true },
   body: { type: String, required: true },
-  image: String,
   image_cloud_url: String,
   image_cloud_id: String,
   author: { type: Schema.Types.ObjectId, ref: 'User', required: true },

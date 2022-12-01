@@ -4,12 +4,13 @@ const { body, validationResult } = require('express-validator');
 const passport = require('passport');
 const slug = require('slug');
 
+const { upload, cloudinaryDelete } = require('../config/cloudinary');
 const { checkIsAuthor, checkIsAdmin } = require('../middleware/checkRoles');
 
 exports.getPosts = (req, res) => {
   Post.find(
     { published: true },
-    'title slug url body published published_at created_at author url'
+    'title slug url body published published_at created_at author url image_cloud_url'
   )
     .sort({ published_at: -1, created_at: -1 })
     .populate('author', 'displayName url')
@@ -27,7 +28,7 @@ exports.getUnpublishedPosts = [
   (req, res) => {
     Post.find(
       { published: false },
-      'title slug url body published published_at created_at author url'
+      'title slug url body published published_at created_at author url image_cloud_url'
     )
       .sort({ published_at: -1, created_at: -1 })
       .populate('author', 'displayName url')
@@ -46,7 +47,7 @@ exports.getAllPosts = [
   (req, res) => {
     Post.find(
       {},
-      'title slug url body published published_at created_at author url'
+      'title slug url body published published_at created_at author url image_cloud_url'
     )
       .sort({ published_at: -1, created_at: -1 })
       .populate('author', 'displayName url')
@@ -62,22 +63,34 @@ exports.getAllPosts = [
 exports.newPost = [
   passport.authenticate('jwt', { session: false }),
   checkIsAuthor,
+  upload.single('image'),
+
   body('title', 'Post title required') //
     .trim()
     .isLength({ min: 1 }),
-  // .escape(), // React will escape the string anyway
   body('body', 'Post body text required') //
     .trim()
     .isLength({ min: 1 }),
-  // .escape(),
 
   // Save to database
   (req, res, next) => {
     // Extract the express-validator errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
+    const errors = validationResult(req).array();
+
+    // Check if a valid image file was provided
+    if (req.file == undefined) {
+      errors.push({
+        msg: 'Please upload an image in .gif, .jpg/.jpeg, or .png format',
+      });
+    }
+
+    if (errors.length) {
+      if (req.file !== undefined) {
+        // The file will be saved to Cloudinary regardless of the results of validation. That could be prevented by moving validation to fileFilter of multer configs but that seems like mixing concerns. Also client-side validation means this situation should not ordinarily occur
+        cloudinaryDelete(req.file.filename);
+      }
       // 400 Bad Request – Client-side input fails validation
-      return res.status(400).json({ errors: errors.array().map((x) => x.msg) });
+      return res.status(400).json({ errors: errors.map((x) => x.msg) });
     }
 
     // Check if title already exists
@@ -85,8 +98,11 @@ exports.newPost = [
       if (err) {
         return next(err);
       }
-      // 400 Bad Request – Client-side input fails validation.
+
       if (found_post) {
+        // See notes above on this
+        cloudinaryDelete(req.file.filename);
+
         return res.status(400).json({
           errors:
             'A blog post with that title already exists. Please pick another.',
@@ -100,6 +116,8 @@ exports.newPost = [
           slug: slug(req.body.title),
           author: req.user.sub,
           published: false,
+          image_cloud_id: req.file.filename,
+          image_cloud_url: req.file.path,
         });
 
         post.save((err) => {
@@ -154,7 +172,7 @@ exports.updatePost = [
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       // 400 Bad Request – Client-side input fails validation
-      return res.status(400).json({ errors: errors.array().map((x) => x.msg) });
+      return res.status(400).json({ errors: errors.map((x) => x.msg) });
     }
 
     Post.findOne({ slug: req.params.postId })
@@ -298,6 +316,9 @@ exports.deletePost = [
             if (err) {
               return next(err);
             }
+
+            // Remove its image from the cloud
+            cloudinaryDelete(post.image_cloud_id);
 
             return res.status(200).json({
               referencingCommentDeletion: refResult,
