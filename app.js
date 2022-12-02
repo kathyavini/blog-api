@@ -20,7 +20,9 @@ connectDb();
 
 const app = express();
 
-app.use(cors({ origin: ['http://localhost:8000'] }));
+app.use(
+  cors({ origin: ['http://localhost:8000', 'https://kathyavini.github.io'] })
+);
 
 // Set up local authentication
 app.use(
