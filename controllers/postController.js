@@ -10,7 +10,7 @@ const { checkIsAuthor, checkIsAdmin } = require('../middleware/checkRoles');
 exports.getPosts = (req, res) => {
   Post.find(
     { published: true },
-    'title slug url body published published_at created_at author url image_cloud_url'
+    'title slug url body published published_at created_at author url image_cloud_url image_cloud_id'
   )
     .sort({ published_at: -1, created_at: -1 })
     .populate('author', 'displayName url')
@@ -47,7 +47,7 @@ exports.getAllPosts = [
   (req, res) => {
     Post.find(
       {},
-      'title slug url body published published_at created_at author url image_cloud_url'
+      'title slug url body published published_at created_at author url image_cloud_url image_cloud_id'
     )
       .sort({ published_at: -1, created_at: -1 })
       .populate('author', 'displayName url')
@@ -134,7 +134,7 @@ exports.newPost = [
 exports.getPost = (req, res, next) => {
   Post.findOne(
     { slug: req.params.postId },
-    'title slug url body published_at created_at updated_at author url published'
+    'title slug url body published_at created_at updated_at author url published image_cloud_url image_cloud_id'
   )
     .populate('author', 'displayName url')
     .exec((err, post) => {
