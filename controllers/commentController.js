@@ -79,6 +79,7 @@ exports.newCommentReply = [
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array().map((x) => x.msg) });
     }
+
     // Make sure that the parent comment is not already itself a reply to a comment (i.e. allow one level of comment nesting only)
     Comment.findOne({ _id: req.params.commentId }, (err, parentComment) => {
       if (err) {
@@ -151,7 +152,8 @@ exports.updateComment = [
           return res.status(404).json({ error: 'Comment not found' });
         }
 
-        // Whether this is possible depends on how comment deletion is implemented for comments with replies (if the whole reply chain is removed or the parent comment's text and author are removed only)
+        // Whether this is possible depends on how comment deletion is implemented (if the reference is removed or the text removed and author set to null)
+
         // if (comment.author == null) {
         //   return res.status(404).json({ error: 'Comment has been deleted' });
         // }
@@ -192,6 +194,7 @@ exports.deleteComment = [
         }
 
         // Whether this is possible depends on how comment deletion is implemented (if the reference is removed or the text removed and author set to null)
+
         // if (comment.author == null) {
         //   return res.status(404).json({ error: 'Comment has been deleted' });
         // }
@@ -203,7 +206,8 @@ exports.deleteComment = [
         }
 
         if (comment.childComments.length > 0) {
-          // FIRST IMPLEMENTATION: If there is a reply chain, only change the text to "Comment Deleted" (so replies can continue to be seen)
+          // FIRST IMPLEMENTATION: If there is a reply chain, change the text to "Comment Deleted" (so replies can continue to be seen) and set the author to null
+
           // comment.body = 'Comment Deleted';
           // comment.author = null;
           // comment.updated_at = new Date();

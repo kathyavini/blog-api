@@ -4,7 +4,7 @@ const controller = require('../controllers/commentController');
 
 router //
   .route('/:postId/comments')
-  .get(controller.getComments) // might not be necessary
+  .get(controller.getComments)
   .post(controller.newComment);
 
 router
