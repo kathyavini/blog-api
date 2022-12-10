@@ -4,7 +4,6 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const passport = require('passport');
-const session = require('express-session');
 
 require('dotenv').config(); // used in routes; configure first
 
@@ -32,19 +31,9 @@ app.use(
   })
 );
 
-// Set up local authentication
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-  })
-);
-
 require('./config/passport');
 
 app.use(passport.initialize());
-app.use(passport.session());
 
 app.use(logger('dev'));
 app.use(express.json());

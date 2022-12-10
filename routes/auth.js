@@ -11,8 +11,4 @@ router
   .route('/protected') //
   .get(controller.testProtectedRoute);
 
-router
-  .route('/logout') //
-  .post(controller.logOutUser);
-
 module.exports = router;
