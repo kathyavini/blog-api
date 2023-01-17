@@ -6,7 +6,8 @@
     "start": "node ./bin/www",
     "devstart": "nodemon ./bin/www",
     "serverstart": "DEBUG=blog-api:* npm run devstart",
-    "test": "jest --detectOpenHandles --runInBand"
+    "test": "NODE_ENV=test jest --detectOpenHandles --runInBand",
+    "start:test": "NODE_ENV=test node ./bin/www"
   },
   "dependencies": {
     "async": "^3.2.4",

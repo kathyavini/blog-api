@@ -48,6 +48,12 @@ app.use('/authors', authorsRouter);
 app.use('/', postsRouter);
 app.use('/', commentsRouter);
 
+// For clearing test db in e2e tests
+if (process.env.NODE_ENV === 'test') {
+  const testingRouter = require('./routes/testing');
+  app.use('/testing', testingRouter);
+}
+
 app.use((err, req, res, next) => {
   res.json(err.message);
 });

@@ -3,7 +3,10 @@ const mongoose = require('mongoose');
 mongoose.set('toObject', { virtuals: true });
 mongoose.set('toJSON', { virtuals: true });
 
-const mongoDb = process.env.MONGO_URI;
+const mongoDb =
+  process.env.NODE_ENV === 'test'
+    ? process.env.TEST_MONGO_URI // for e2e tests
+    : process.env.MONGO_URI;
 
 let db;
 
